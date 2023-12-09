@@ -13,18 +13,28 @@ func routes(_ app: Application) throws {
             clientSecret: req.application.graphAPIKeys.clientSecret
         )
         let newRefreshToken = RefreshToken(tokenValue: response.refresh_token)
-        let newAccessToken = AccessToken(tokenValue: response.access_token)
+        let newAccessToken = AccessToken(tokenValue: response.access_token, expiresIn: response.expires_in)
         try await newRefreshToken.save(on: req.db)
         try await newAccessToken.save(on: req.db)
         return response
     }
-
-    app.get("hello") { req async throws -> [DriveItem] in
-        guard let accessToken = try await AccessToken.query(on: req.db).first() else {
-            throw Abort(.custom(code: 404, reasonPhrase: "Access token not found."))
-        }
-        return try await req.application.graphAPIClient.listItems(paths: ["Sync", "Rime"], token: accessToken.tokenValue)
+    
+    app.get("drive") { req async throws -> View in
+        let accessToken = try await getAccessToken(app: req.application)
+        let items = try await req.application.graphAPIClient.listItems(paths: [], token: accessToken.tokenValue)
+        
+        return try await req.view.render("index", ["items": items])
     }
 
-    try app.register(collection: TodoController())
+    app.get("drive", "**") { req async throws -> View in
+        let path = req.parameters.getCatchall()
+        let accessToken = try await getAccessToken(app: req.application)
+        let items = try await req.application.graphAPIClient.listItems(paths: path, token: accessToken.tokenValue)
+        
+        items.filter { $0.microsoftGraphDownloadUrl != nil }.forEach{ print($0.microsoftGraphDownloadUrl!) }
+        
+        print(items)
+        
+        return try await req.view.render("index", ["items": items])
+    }
 }

@@ -18,13 +18,17 @@ class GraphAPIClient {
     
     /// List items in user's drive
     func listItems(paths: [String], token: String) async throws -> [DriveItem] {
-        let path = [
-            "/me/drive/root",
-            paths.reduce("", { partialResult, nextPath in
-                return "\(partialResult)/\(nextPath)"
-            }),
-            "/children"
-        ].joined(separator: ":")
+        let path = if paths.isEmpty {
+            "/me/drive/root/children"
+        } else {
+            [
+                "/me/drive/root",
+                paths.reduce("", { partialResult, nextPath in
+                    return "\(partialResult)/\(nextPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? nextPath)"
+                }),
+                "/children"
+            ].joined(separator: ":")
+        }
         
         let response = try await client.get(
             URI(string: GraphAPIClient.baseURL + path),

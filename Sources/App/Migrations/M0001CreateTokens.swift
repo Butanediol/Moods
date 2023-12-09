@@ -13,6 +13,7 @@ struct M0001CreateTokens: AsyncMigration {
             .id()
             .field("token_value", .string, .required)
             .field("created_at", .datetime, .required)
+            .field("expires_in", .int, .required)
             .create()
         
         try await database.schema(RefreshToken.schema)

@@ -19,7 +19,7 @@ public func configure(_ app: Application) async throws {
         tls: .prefer(try .init(configuration: .clientDefault)))
     ), as: .psql)
     
-    app.queues.use(.fluent())
+    app.queues.use(.fluent())        
     app.queues.schedule(RefreshAccessTokenJob())
         .hourly()
         .at(0)
