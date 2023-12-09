@@ -1,6 +1,7 @@
 import NIOSSL
 import Fluent
 import FluentPostgresDriver
+import QueuesFluentDriver
 import Leaf
 import Vapor
 
@@ -17,7 +18,13 @@ public func configure(_ app: Application) async throws {
         database: Environment.get("DATABASE_NAME") ?? "vapor_database",
         tls: .prefer(try .init(configuration: .clientDefault)))
     ), as: .psql)
+    
+    app.queues.use(.fluent())
+    app.queues.schedule(RefreshAccessTokenJob())
+        .hourly()
+        .at(0)
 
+    app.migrations.add(JobMetadataMigrate())
     app.migrations.add(M0001CreateTokens())
 
     app.views.use(.leaf)
