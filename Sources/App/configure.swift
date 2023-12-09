@@ -18,11 +18,11 @@ public func configure(_ app: Application) async throws {
         tls: .prefer(try .init(configuration: .clientDefault)))
     ), as: .psql)
 
-    app.migrations.add(CreateTodo())
+    app.migrations.add(M0001CreateTokens())
 
     app.views.use(.leaf)
 
-    
+    app.graphAPIClient = GraphAPIClient(client: app.client)
 
     // register routes
     try routes(app)

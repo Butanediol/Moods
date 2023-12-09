@@ -6,8 +6,11 @@ func routes(_ app: Application) throws {
         try await req.view.render("index", ["title": "Hello Vapor!"])
     }
 
-    app.get("hello") { req async -> String in
-        "Hello, world!"
+    app.get("hello") { req async throws -> [DriveItem] in
+        guard let accessToken = try await AccessToken.query(on: req.db).first() else {
+            throw Abort(.custom(code: 404, reasonPhrase: "Access token not found."))
+        }
+        return try await req.application.graphAPIClient.listItems(paths: ["Sync", "Rime"], token: accessToken)
     }
 
     try app.register(collection: TodoController())
