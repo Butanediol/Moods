@@ -22,8 +22,24 @@ public func configure(_ app: Application) async throws {
 
     app.views.use(.leaf)
 
+    guard let clientId = Environment.get("CLIENT_ID"),
+          let clientSecret = Environment.get("CLIENT_SECRET"),
+          let refreshToken = Environment.get("REFRESH_TOKEN"),
+          let accessToken = Environment.get("ACCESS_TOKEN") else {
+        throw MoodsError.runtimeError("Invalid Graph API value")
+    }
+    app.graphAPIKeys = GraphAPIKeys(
+        clientId: clientId,
+        clientSecret: clientSecret,
+        refreshToken: refreshToken,
+        accessToken: accessToken
+    )
     app.graphAPIClient = GraphAPIClient(client: app.client)
 
     // register routes
     try routes(app)
+}
+
+enum MoodsError: Error {
+    case runtimeError(String)
 }

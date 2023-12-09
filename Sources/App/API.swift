@@ -37,10 +37,34 @@ class GraphAPIClient {
         return graphResponse.value
     }
     
-    func refreshAccessToken(clientId: String, refreshToken: String, clientSecret: String) async throws -> String {
-        let uri = URI(string: "https://login.microsoftonline.com/common/oauth2/v2.0/token&client_id=\(clientId)&scope=files.read%20files.read.all&refresh_token=\(refreshToken)&grant_type=refresh_token&client_secret=\(clientSecret)")
-        client.post(uri)
+    func refreshAccessToken(clientId: String, refreshToken: String, clientSecret: String) async throws -> RefreshAccessTokenResponse {
+        let uri = URI(string: "https://login.microsoftonline.com/common/oauth2/v2.0/token")
+        
+        
+        let response = try await client.post(
+            uri,
+            headers: HTTPHeaders([("Content-Type", "application/x-www-form-urlencoded")])
+        ) { request in
+            let body = RefreshAccessTokenRequestBody(
+                client_id: clientId,
+                scope: "Files.Read Files.Read.All",
+                refresh_token: refreshToken,
+                grant_type: "refresh_token",
+                client_secret: clientSecret
+            )
+            try request.content.encode(body, as: .urlEncodedForm)
+        }
+        return try response.content.decode(RefreshAccessTokenResponse.self)
     }
+}
+
+struct RefreshAccessTokenRequestBody: Codable {
+    let client_id, scope, refresh_token, grant_type, client_secret: String
+}
+
+struct RefreshAccessTokenResponse: Content {
+    let access_token, refresh_token, token_type, scope: String
+    let expires_in: Int
 }
 
 struct GraphAPIClientKey: StorageKey {
@@ -54,6 +78,28 @@ extension Application {
         }
         set {
             self.storage[GraphAPIClientKey.self] = newValue
+        }
+    }
+}
+
+struct GraphAPIKeys {
+    let clientId: String
+    let clientSecret: String
+    let refreshToken: String
+    let accessToken: String
+}
+
+struct GraphAPIKeysKey: StorageKey {
+    typealias Value = GraphAPIKeys
+}
+
+extension Application {
+    var graphAPIKeys: GraphAPIKeys! {
+        get {
+            self.storage[GraphAPIKeysKey.self]
+        }
+        set {
+            self.storage[GraphAPIKeysKey.self] = newValue
         }
     }
 }

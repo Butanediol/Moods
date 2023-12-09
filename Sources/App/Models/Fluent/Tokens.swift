@@ -16,6 +16,9 @@ final class AccessToken: Model, Content {
 
     @Field(key: "token_value")
     var tokenValue: String
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
 
     init(id: UUID? = nil, tokenValue: String) {
         self.id = id
@@ -33,6 +36,9 @@ final class RefreshToken: Model, Content {
 
     @Field(key: "token_value")
     var tokenValue: String
+    
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
 
     init(id: UUID? = nil, tokenValue: String) {
         self.id = id

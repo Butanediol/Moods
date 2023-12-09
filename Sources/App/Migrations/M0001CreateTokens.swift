@@ -12,11 +12,13 @@ struct M0001CreateTokens: AsyncMigration {
         try await database.schema(AccessToken.schema)
             .id()
             .field("token_value", .string, .required)
+            .field("created_at", .datetime, .required)
             .create()
         
         try await database.schema(RefreshToken.schema)
             .id()
             .field("token_value", .string, .required)
+            .field("created_at", .datetime, .required)
             .create()
     }
 
